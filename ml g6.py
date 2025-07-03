@@ -61,16 +61,17 @@ input_df = input_df[expected_cols]
 st.subheader("📅 Your Input Parameters:")
 st.write(input_df)
 
-# Predict
-prediction = model.predict(input_df)[0]
-prediction_proba = model.predict_proba(input_df)[0]
+# Prediction button
+if st.button("Predict Potability"):
+    prediction = model.predict(input_df)[0]
+    prediction_proba = model.predict_proba(input_df)[0]
 
-# Output
-st.subheader("🎯 Prediction Result")
-if prediction == 1:
-    st.success(f"The water is **potable**! ✅ Probability: {prediction_proba[1]:.2%}")
-else:
-    st.error(f"The water is **not potable**! ❌ Probability: {prediction_proba[0]:.2%}")
+    # Output
+    st.subheader("🎯 Prediction Result")
+    if prediction == 1:
+        st.success(f"The water is **potable**! ✅ Probability: {prediction_proba[1]:.2%}")
+    else:
+        st.error(f"The water is **not potable**! ❌ Probability: {prediction_proba[0]:.2%}")
 
 # Optional visualization
 if st.checkbox("Show Feature Distributions"):
