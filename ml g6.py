@@ -20,6 +20,11 @@ def load_data():
 
 df = load_data()
 
+# Force same column order as model was trained on
+expected_cols = ['ph', 'Hardness', 'Solids', 'Chloramines', 'Sulfate',
+                 'Conductivity', 'Organic_carbon', 'Trihalomethanes', 'Turbidity']
+input_df = input_df[expected_cols]
+
 # Sidebar - Title & Info
 st.sidebar.title("💧 Water Potability Predictor")
 st.sidebar.info("This app predicts whether water is potable based on its chemical properties.")
