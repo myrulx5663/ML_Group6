@@ -13,10 +13,10 @@ def load_model():
 model = load_model()
 
 # Load dataset for UI and reference
-# @st.cache_data
-# def load_data():
-#     df = pd.read_csv("water_potability.csv")
-#     return df
+@st.cache_data
+def load_data():
+    df = pd.read_csv("water_potability.csv")
+    return df
 
 # df = load_data()
 
