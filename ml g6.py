@@ -20,10 +20,6 @@ def load_data():
 
 df = load_data()
 
-# Force same column order as model was trained on
-expected_cols = ['ph', 'Hardness', 'Solids', 'Chloramines', 'Sulfate',
-                 'Conductivity', 'Organic_carbon', 'Trihalomethanes', 'Turbidity']
-input_df = input_df[expected_cols]
 
 # Sidebar - Title & Info
 st.sidebar.title("💧 Water Potability Predictor")
@@ -64,7 +60,11 @@ def user_input_features():
     features = pd.DataFrame(data, index=[0])
     return features
 
-input_df = user_input_features()
+# input_df = user_input_features()
+# Force same column order as model was trained on
+expected_cols = ['ph', 'Hardness', 'Solids', 'Chloramines', 'Sulfate',
+                 'Conductivity', 'Organic_carbon', 'Trihalomethanes', 'Turbidity']
+input_df = input_df[expected_cols]
 
 # Show input
 st.subheader("📅 Your Input Parameters:")
