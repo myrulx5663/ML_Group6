@@ -18,7 +18,7 @@ def load_data():
     df = pd.read_csv("water_potability.csv")
     return df
 
-# df = load_data()
+df = load_data()
 
 # Sidebar - Title & Info
 st.sidebar.title("💧 Water Potability Predictor")
