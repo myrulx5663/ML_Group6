@@ -8,32 +8,24 @@ import seaborn as sns
 # Load model
 @st.cache_resource
 def load_model():
-    return joblib.load("water_potability_pipeline.pkl")  # Ensure this file exists in the same directory
+    return joblib.load("water_potability_pipeline.pkl")
 
 model = load_model()
 
-# Load dataset for UI and reference
+# Load dataset for reference and slider ranges
 @st.cache_data
 def load_data():
-    df = pd.read_csv("water_potability.csv")
-    return df
+    return pd.read_csv("water_potability.csv")
 
 df = load_data()
 
-
-# Sidebar - Title & Info
+# Sidebar
 st.sidebar.title("💧 Water Potability Predictor")
 st.sidebar.info("This app predicts whether water is potable based on its chemical properties.")
 
-# # Display Raw Data
-# if st.checkbox("Show Raw Data", value=True):
-#     st.subheader("📊 Raw Water Quality Data")
-#     st.dataframe(df.style.highlight_max(axis=0).set_properties(**{'background-color': '#f2f2f2'}))
-
-# Input Section
+# Input sliders
 st.subheader("🔧 Enter Water Parameters")
 
-# Helper function to create sliders
 def user_input_features():
     ph = st.slider("pH", float(df['ph'].min()), float(df['ph'].max()), float(df['ph'].mean()))
     hardness = st.slider("Hardness", float(df['Hardness'].min()), float(df['Hardness'].max()), float(df['Hardness'].mean()))
@@ -56,35 +48,34 @@ def user_input_features():
         'Trihalomethanes': trihalomethanes,
         'Turbidity': turbidity
     }
-
-    features = pd.DataFrame(data, index=[0])
-    return features
+    return pd.DataFrame(data, index=[0])
 
 input_df = user_input_features()
-# Force same column order as model was trained on
+
+# Ensure correct column order
 expected_cols = ['ph', 'Hardness', 'Solids', 'Chloramines', 'Sulfate',
                  'Conductivity', 'Organic_carbon', 'Trihalomethanes', 'Turbidity']
 input_df = input_df[expected_cols]
 
-# Show input
+# Show user input
 st.subheader("📅 Your Input Parameters:")
 st.write(input_df)
 
-# Real prediction using loaded model
+# Predict
 prediction = model.predict(input_df)[0]
 prediction_proba = model.predict_proba(input_df)[0]
 
-# Display Prediction
+# Output
 st.subheader("🎯 Prediction Result")
 if prediction == 1:
     st.success(f"The water is **potable**! ✅ Probability: {prediction_proba[1]:.2%}")
 else:
     st.error(f"The water is **not potable**! ❌ Probability: {prediction_proba[0]:.2%}")
 
-# Optional: Feature Distribution Plots
+# Optional visualization
 if st.checkbox("Show Feature Distributions"):
     st.subheader("📈 Feature Distributions")
-    selected_feature = st.selectbox("Select feature to visualize", df.columns[:-1])  # exclude target
+    selected_feature = st.selectbox("Select feature to visualize", df.columns[:-1])
     fig, ax = plt.subplots()
     sns.histplot(df[selected_feature], kde=True, ax=ax, color='skyblue')
     ax.axvline(input_df[selected_feature][0], color='red', linestyle='--', label='Your Input')
