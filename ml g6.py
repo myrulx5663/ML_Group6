@@ -1,94 +1,62 @@
-import streamlit as st
+# train_model.py
+
 import pandas as pd
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.svm import SVC
+from sklearn.metrics import precision_recall_curve, auc, accuracy_score
 import numpy as np
 import joblib
-import matplotlib.pyplot as plt
-import seaborn as sns
 
-# Load model
-@st.cache_resource
-def load_model():
-    return joblib.load("water_potability_pipeline.pkl")
+# Load dataset
+df = pd.read_csv("water_potability.csv")
 
-model = load_model()
+# Split features and target
+X = df.drop(columns=["Potability"])
+y = df["Potability"]
 
-# Load dataset for reference and slider ranges
-@st.cache_data
-def load_data():
-    return pd.read_csv("water_potability.csv")
+# Train-test split
+X_train_full, X_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+X_train, X_val = train_test_split(X_train_full, test_size=0.2, stratify=y_train_full, random_state=42)
 
-df = load_data()
+# Define and calibrate SVC
+svc = SVC(probability=True, class_weight='balanced', C=1, kernel='rbf')
+calibrated_svc = CalibratedClassifierCV(estimator=svc, cv=5)
 
-# Sidebar
-st.sidebar.title("💧 Water Potability Predictor")
-st.sidebar.info("This app predicts whether water is potable based on its chemical properties.")
+pipeline = Pipeline([
+    ('imputer', SimpleImputer(strategy='mean')),
+    ('scaler', StandardScaler()),
+    ('model', calibrated_svc)
+])
 
-# Input sliders
-st.subheader("🔧 Enter Water Parameters")
+# Fit the pipeline
+pipeline.fit(X_train, y_train)
 
-def user_input_features():
-    ph = st.slider("pH", float(df['ph'].min()), float(df['ph'].max()), float(df['ph'].mean()))
-    hardness = st.slider("Hardness", float(df['Hardness'].min()), float(df['Hardness'].max()), float(df['Hardness'].mean()))
-    solids = st.slider("Solids", float(df['Solids'].min()), float(df['Solids'].max()), float(df['Solids'].mean()))
-    chloramines = st.slider("Chloramines", float(df['Chloramines'].min()), float(df['Chloramines'].max()), float(df['Chloramines'].mean()))
-    sulfate = st.slider("Sulfate", float(df['Sulfate'].min()), float(df['Sulfate'].max()), float(df['Sulfate'].mean()))
-    conductivity = st.slider("Conductivity", float(df['Conductivity'].min()), float(df['Conductivity'].max()), float(df['Conductivity'].mean()))
-    organic_carbon = st.slider("Organic Carbon", float(df['Organic_carbon'].min()), float(df['Organic_carbon'].max()), float(df['Organic_carbon'].mean()))
-    trihalomethanes = st.slider("Trihalomethanes", float(df['Trihalomethanes'].min()), float(df['Trihalomethanes'].max()), float(df['Trihalomethanes'].mean()))
-    turbidity = st.slider("Turbidity", float(df['Turbidity'].min()), float(df['Turbidity'].max()), float(df['Turbidity'].mean()))
+# Predict probabilities on validation set
+probs = pipeline.predict_proba(X_val)[:, 1]
+precision, recall, thresholds = precision_recall_curve(y_val, probs)
+pr_auc = auc(recall, precision)
 
-    data = {
-        'ph': ph,
-        'Hardness': hardness,
-        'Solids': solids,
-        'Chloramines': chloramines,
-        'Sulfate': sulfate,
-        'Conductivity': conductivity,
-        'Organic_carbon': organic_carbon,
-        'Trihalomethanes': trihalomethanes,
-        'Turbidity': turbidity
-    }
-    return pd.DataFrame(data, index=[0])
+# Select best threshold (e.g., max F1)
+f1_scores = 2 * (precision * recall) / (precision + recall + 1e-6)
+best_thr = thresholds[np.argmax(f1_scores)]
 
-input_df = user_input_features()
+# Evaluate on test set using best threshold
+test_probs = pipeline.predict_proba(X_test)[:, 1]
+y_test_pred = (test_probs >= best_thr).astype(int)
+test_accuracy = accuracy_score(y_test, y_test_pred)
 
-# Ensure correct column order
-expected_cols = ['ph', 'Hardness', 'Solids', 'Chloramines', 'Sulfate',
-                 'Conductivity', 'Organic_carbon', 'Trihalomethanes', 'Turbidity']
-input_df = input_df[expected_cols]
+print(f"Best Threshold: {best_thr:.4f}")
+print(f"Validation AUC-PR: {pr_auc:.4f}")
+print(f"Test Accuracy (Threshold {best_thr:.2f}): {test_accuracy:.4f}")
 
-# Show user input
-st.subheader("Your Input Parameters:")
-st.write(input_df)
+# Save the model and threshold
+joblib.dump({
+    "pipeline": pipeline,
+    "threshold": best_thr
+}, "best_model_svc_calibrated.pkl")
 
-# Prediction button
-if st.button("Predict Potability"):
-    best_thr = 0.30#Best threshold after fine tuned
-    prob = model.predict_proba(input_df)[0][1]  # Probability of class 1 (potable)
-    prediction = 1 if prob >= best_thr else 0
-
-    prediction_proba = model.predict_proba(input_df)[0]
-
-    # Output
-    st.subheader("🎯 Prediction Result")
-    if prediction == 1:
-        st.success(f"The water is **potable**! ✅ Probability: {prediction_proba[1]:.2%}")
-        st.write(f"🔎 Model probability: {prob:.4f} | Threshold: {best_thr}")
-    else:
-        st.error(f"The water is **not potable**! ❌ Probability: {prediction_proba[0]:.2%}")
-        st.write(f"🔎 Model probability: {prob:.4f} | Threshold: {best_thr}")
-
-
-# Optional visualization
-if st.checkbox("Show Feature Distributions"):
-    st.subheader("📈 Feature Distributions")
-    selected_feature = st.selectbox("Select feature to visualize", df.columns[:-1])
-    fig, ax = plt.subplots()
-    sns.histplot(df[selected_feature], kde=True, ax=ax, color='skyblue')
-    ax.axvline(input_df[selected_feature][0], color='red', linestyle='--', label='Your Input')
-    ax.legend()
-    st.pyplot(fig)
-
-# Footer
-st.markdown("---")
-st.markdown("Developed with ❤️ using Streamlit | Dataset Source: Internal")
+print("\n✅ Calibrated SVC model saved as 'best_model_svc_calibrated.pkl'")
