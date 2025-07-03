@@ -58,7 +58,7 @@ expected_cols = ['ph', 'Hardness', 'Solids', 'Chloramines', 'Sulfate',
 input_df = input_df[expected_cols]
 
 # Show user input
-st.subheader("📅 Your Input Parameters:")
+st.subheader("Your Input Parameters:")
 st.write(input_df)
 
 # Prediction button
