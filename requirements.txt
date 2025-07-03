@@ -4,7 +4,7 @@ catboost==1.2.8
 joblib==1.5.1
 
 lightgbm==4.6.0
-
+streamlit==1.46.1
 MarkupSafe==3.0.2
 matplotlib==3.10.3
 matplotlib-inline==0.1.7
