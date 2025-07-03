@@ -2,11 +2,17 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# Load model (replace 'model.pkl' with your actual saved model file)
-# model = joblib.load('model.pkl')
+# Load model
+@st.cache_resource
+def load_model():
+    return joblib.load("water_potability_pipeline.pkl")  # Ensure this file exists in the same directory
 
-# Load dataset
+model = load_model()
+
+# Load dataset for UI and reference
 @st.cache_data
 def load_data():
     df = pd.read_csv("water_potability.csv")
@@ -56,20 +62,15 @@ def user_input_features():
 input_df = user_input_features()
 
 # Show input
-st.subheader("📥 Your Input Parameters:")
+st.subheader("📅 Your Input Parameters:")
 st.write(input_df)
 
-# Dummy prediction (replace with real model)
-# prediction = model.predict(input_df)[0]
-# prediction_proba = model.predict_proba(input_df)[0]
-
-# Fake output for demo purposes
-prediction = np.random.choice([0, 1])
-prediction_proba = [0.6, 0.4] if prediction == 0 else [0.4, 0.6]
+# Real prediction using loaded model
+prediction = model.predict(input_df)[0]
+prediction_proba = model.predict_proba(input_df)[0]
 
 # Display Prediction
 st.subheader("🎯 Prediction Result")
-
 if prediction == 1:
     st.success(f"The water is **potable**! ✅ Probability: {prediction_proba[1]:.2%}")
 else:
@@ -79,8 +80,6 @@ else:
 if st.checkbox("Show Feature Distributions"):
     st.subheader("📈 Feature Distributions")
     selected_feature = st.selectbox("Select feature to visualize", df.columns[:-1])  # exclude target
-    import matplotlib.pyplot as plt
-    import seaborn as sns
     fig, ax = plt.subplots()
     sns.histplot(df[selected_feature], kde=True, ax=ax, color='skyblue')
     ax.axvline(input_df[selected_feature][0], color='red', linestyle='--', label='Your Input')
