@@ -13,21 +13,21 @@ def load_model():
 model = load_model()
 
 # Load dataset for UI and reference
-@st.cache_data
-def load_data():
-    df = pd.read_csv("water_potability.csv")
-    return df
+# @st.cache_data
+# def load_data():
+#     df = pd.read_csv("water_potability.csv")
+#     return df
 
-df = load_data()
+# df = load_data()
 
 # Sidebar - Title & Info
 st.sidebar.title("💧 Water Potability Predictor")
 st.sidebar.info("This app predicts whether water is potable based on its chemical properties.")
 
-# Display Raw Data
-if st.checkbox("Show Raw Data", value=True):
-    st.subheader("📊 Raw Water Quality Data")
-    st.dataframe(df.style.highlight_max(axis=0).set_properties(**{'background-color': '#f2f2f2'}))
+# # Display Raw Data
+# if st.checkbox("Show Raw Data", value=True):
+#     st.subheader("📊 Raw Water Quality Data")
+#     st.dataframe(df.style.highlight_max(axis=0).set_properties(**{'background-color': '#f2f2f2'}))
 
 # Input Section
 st.subheader("🔧 Enter Water Parameters")
