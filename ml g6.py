@@ -63,7 +63,7 @@ st.write(input_df)
 
 # Prediction button
 if st.button("Predict Potability"):
-    best_thr = 0.387  # Replace this with your actual best threshold
+    best_thr = 0.5  # Replace this with your actual best threshold
     prob = model.predict_proba(input_df)[0][1]  # Probability of class 1 (potable)
     prediction = 1 if prob >= best_thr else 0
 
