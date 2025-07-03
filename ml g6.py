@@ -73,8 +73,11 @@ if st.button("Predict Potability"):
     st.subheader("🎯 Prediction Result")
     if prediction == 1:
         st.success(f"The water is **potable**! ✅ Probability: {prediction_proba[1]:.2%}")
+        st.write(f"🔎 Model probability: {prob:.4f} | Threshold: {best_thr}")
     else:
         st.error(f"The water is **not potable**! ❌ Probability: {prediction_proba[0]:.2%}")
+        st.write(f"🔎 Model probability: {prob:.4f} | Threshold: {best_thr}")
+
 
 # Optional visualization
 if st.checkbox("Show Feature Distributions"):
