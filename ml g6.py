@@ -60,7 +60,7 @@ def user_input_features():
     features = pd.DataFrame(data, index=[0])
     return features
 
-# input_df = user_input_features()
+input_df = user_input_features()
 # Force same column order as model was trained on
 expected_cols = ['ph', 'Hardness', 'Solids', 'Chloramines', 'Sulfate',
                  'Conductivity', 'Organic_carbon', 'Trihalomethanes', 'Turbidity']
